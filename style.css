@@ -7,3 +7,4 @@
 main{max-width:1140px}.game{min-width:0;max-width:760px}.stats{position:sticky;top:0;z-index:4;background:var(--paper);padding:9px 0;margin-bottom:8px}.countdown{position:sticky;top:86px;z-index:4}@media(max-width:760px){.game{max-width:none}.countdown{top:79px}}
 .stats>div>span{font-size:14px}.countdown{top:var(--hud-height,86px)}.pond-wrap{max-width:min(100%,calc((100svh - 220px)*1.44))}@media(max-width:760px){.pond-wrap{max-width:none}.stats>div>span{font-size:13px}}
 @media(max-width:760px){.pond-wrap:has(.pond-overlay[hidden]) #pond{aspect-ratio:720/500;min-height:0}}
+.pond-overlay{overflow:auto;align-items:safe center}.overlay-card{flex-shrink:0}@media(max-width:760px){.pond-wrap:has(.pond-overlay:not([hidden])) #pond{min-height:440px}}
