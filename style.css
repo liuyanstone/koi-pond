@@ -8,3 +8,5 @@ main{max-width:1140px}.game{min-width:0;max-width:760px}.stats{position:sticky;t
 .stats>div>span{font-size:14px}.countdown{top:var(--hud-height,86px)}.pond-wrap{max-width:min(100%,calc((100svh - 220px)*1.44))}@media(max-width:760px){.pond-wrap{max-width:none}.stats>div>span{font-size:13px}}
 @media(max-width:760px){.pond-wrap:has(.pond-overlay[hidden]) #pond{aspect-ratio:720/500;min-height:0}}
 .pond-overlay{overflow:auto;align-items:safe center}.overlay-card{flex-shrink:0}@media(max-width:760px){.pond-wrap:has(.pond-overlay:not([hidden])) #pond{min-height:440px}}
+
+.replay-panel{border:1px solid #ccd9be;border-radius:14px;background:#e9efdf;padding:20px;margin:0 0 23px}.replay-panel h3{font:500 25px/1.4 var(--serif);margin:0 0 8px}.replay-panel p{font-size:17px;line-height:1.8;color:var(--muted);margin:0 0 16px}.replay-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.replay-controls label{font-size:18px}.replay-controls select{font-size:18px}.replay-controls button{font-size:17px}.replay-panel select:disabled{opacity:.6}@media(max-width:760px){.replay-panel{padding:17px}.replay-controls button{width:100%}}

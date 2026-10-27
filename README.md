@@ -16,11 +16,11 @@ Every round requires feeding each fish exactly once. Tap/click a fish, or Tab to
 
 After a successful round, select the next round. The feeding list resets; the same fish swim faster. Speed multipliers are 1, 1.4, 1.95, 2.7, 3.6 and 4.8. Each round's timer is 0.6 seconds shorter and pellet wait 0.09 seconds longer than the prior round. These are original tuning choices, not claimed Lumosity specifications. Tracking becomes progressively harder, with a maximum of six rounds per pond. Clearing all six earns pond mastery rather than forcing a failure.
 
-A repeated feed after the pellet is ready, or running out of time with unfed fish, ends the current pond. Completed rounds retain their points. Continue to the next daily pond. After three ponds, the daily score is saved and a new set opens tomorrow. This version does not restart a failed pond or offer extra daily ponds.
+A repeated feed after the pellet is ready, or running out of time with unfed fish, ends the current pond. Completed rounds retain their points. Continue to the next daily pond. After three ponds, a difficulty chooser unlocks. Play fresh Easy, Medium or Hard ponds one at a time, with no daily replay limit. Finish the current pond before choosing another. Each replay resets the rounds, timer, cooldown, feeding list and fish, while keeping the day’s completed best scores. An unfinished replay resumes after reopening. A new date starts three fresh starter ponds before replays unlock again.
 
 ## Scoring
 
-Only complete rounds earn points. Each earns the sum 10 + 20 + ... + (10 × fish count), plus a pond bonus multiplied by the round number. Bonuses are 50 for Easy, 100 for Medium and 200 for Hard. The daily total is the sum of the three completed pond results. An unfinished feeding round earns no points. Completed ponds are recorded once.
+Only complete rounds earn points. Each earns the sum 10 + 20 + ... + (10 × fish count), plus a pond bonus multiplied by the round number. Bonuses are 50 for Easy, 100 for Medium and 200 for Hard. The daily total is the highest completed Easy pond score + highest completed Medium pond score + highest completed Hard pond score. Initial daily ponds and all replays count toward these bests. Lower scores and unfinished replays never reduce the total; attempts at the same difficulty are not added together. Existing saves retain their completed scores. An unfinished feeding round earns no points. Completed ponds are recorded once.
 
 ## Pause and saved progress
 
@@ -34,6 +34,6 @@ Lumosity's public [Playing Koi instructions](https://help.lumosity.com/hc/en-us/
 
 Buildless HTML, CSS, SVG and JavaScript modules. Serve this folder with `python3 -m http.server 8781`. Do not open index.html with a file URL; the ES modules require HTTP(S).
 
-Run `node check.mjs` with Node.js. Checks cover six rounds at each of three levels, score calculation, duplicate feeds, cooldown, timeout, pause/resume, hit testing, saved progress, date rollover, corruption handling, English/Chinese parity and 90 motion simulations. Browser checks additionally cover moving-fish pointer input, keyboard feeding, round advancement, cooldown protection, Chinese text, pause/reload and daily score completion.
+Run `node check.mjs` with Node.js. Checks cover six rounds at each of three levels, score calculation, duplicate feeds, cooldown, timeout, pause/resume, hit testing, saved progress, date rollover, corruption handling, English/Chinese parity and 90 motion simulations. Browser checks additionally cover moving-fish pointer input, keyboard feeding, round advancement, cooldown protection, Chinese text, pause/reload and daily score completion, replay unlock, fresh fish, higher/lower replay scores, unfinished replay protection, and replay pause/reload.
 
 Publish the main branch root using GitHub Pages. Google Fonts are optional and have local font fallbacks. Sounds use local Web Audio synthesis, with no microphone or downloads. No analytics, ads, server, or external game API is used.
