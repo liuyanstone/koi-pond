@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';
+import {LEVELS,MAX_ROUNDS,SPEEDS,newPond,startRound,advance,feed,pause,resume,hitFish,roundDuration,pelletDelay,roundPoints,pondPoints,restorePond,localDay} from './engine.mjs';
+import {createStore,restoreStore,checkpoint,currentPond,finishPond,dailyTotal,dayData} from './state.mjs';
+import {en,zh} from './i18n.mjs';
+const day='2026-10-26';assert.deepEqual(LEVELS.map(l=>l.koi),[4,6,8]);assert(SPEEDS.every((v,i)=>i===0||v>SPEEDS[i-1]));
+let rounds=0;
+for(let level=0;level<3;level++){
+ let p=newPond(day,level);assert.equal(p.phase,'ready');assert.equal(p.fish.length,LEVELS[level].koi);assert.deepEqual(newPond(day,level),p);
+ for(let round=1;round<=6;round++){
+  const before=p.points;p=startRound(p);assert.equal(p.round,round);assert.equal(p.fed.length,0);assert.equal(p.cooldown,0);assert.equal(p.remaining,roundDuration(level,round));
+  for(let id=0;id<LEVELS[level].koi;id++){
+   const result=feed(p,id);p=result.state;assert.equal(p.fed.length,id+1);if(id<LEVELS[level].koi-1){assert.equal(result.event,'fed');assert.equal(p.points,before);const early=feed(p,id);assert.equal(early.event,'wait');assert.equal(early.state,p);p=advance(p,pelletDelay(level,round));}else assert.equal(result.event,round===6?'mastered':'round');
+  }
+  assert.equal(p.completed,round);assert.equal(p.points,pondPoints(level,round));assert.equal(p.points-before,roundPoints(level,round));assert.deepEqual(restorePond(JSON.parse(JSON.stringify(p)),day,level),p);rounds++;
+ }
+ assert.equal(p.phase,'finished');assert.equal(p.reason,'mastered');assert.equal(startRound(p),p);assert.equal(feed(p,0).state,p);
+}
+let duplicate=startRound(newPond(day,0));duplicate=feed(duplicate,0).state;duplicate=advance(duplicate,650);duplicate=feed(duplicate,0).state;assert.equal(duplicate.phase,'finished');assert.equal(duplicate.reason,'repeat');assert.equal(duplicate.points,0);
+let timeout=startRound(newPond(day,1));timeout=feed(timeout,0).state;timeout=advance(timeout,roundDuration(1,1));assert.equal(timeout.reason,'time');assert.equal(timeout.remaining,0);assert.equal(timeout.fed.length,1);assert.equal(timeout.points,0);assert.equal(feed(timeout,1).state,timeout);
+let frozen=advance(startRound(newPond(day,0)),2000);frozen=pause(frozen);assert.equal(advance(frozen,600000),frozen);const thawed=resume(frozen);assert.equal(thawed.remaining,11000);assert.equal(thawed.phase,'feeding');assert.deepEqual(restorePond(JSON.parse(JSON.stringify(frozen)),day,0),frozen);
+const empty=newPond(day,0);assert.equal(hitFish(empty.fish,empty.fish[0].x,empty.fish[0].y),0);assert.equal(hitFish(empty.fish,-100,-100),null);assert.equal(feed(startRound(empty),999).event,'miss');assert.equal(feed(empty,0).event,'inactive');
+let state=createStore();assert.equal(currentPond(state,day).level,0);state=checkpoint(state,frozen);assert.deepEqual(currentPond(restoreStore(JSON.parse(JSON.stringify(state))),day),frozen);state=finishPond(state,duplicate);assert.equal(currentPond(state,day).level,1);assert.throws(()=>finishPond(state,duplicate));state=finishPond(state,timeout);let last=startRound(newPond(day,2));for(let id=0;id<8;id++){last=feed(last,id).state;if(id<7)last=advance(last,pelletDelay(2,1));}last=startRound(last);last=advance(last,last.remaining);state=finishPond(state,last);assert.equal(last.completed,1);assert.equal(last.points,roundPoints(2,1));assert.equal(dailyTotal(state,day),last.points);assert.equal(currentPond(state,day),null);assert.deepEqual(restoreStore(JSON.parse(JSON.stringify(state))),state);assert.equal(currentPond(state,'2026-10-27').level,0);assert.equal(dailyTotal(state,'2026-10-27'),0);assert.equal(dailyTotal(state,day),last.points);
+const corrupt=JSON.parse(JSON.stringify(state));corrupt.days[day].results[2].points=999999;assert.equal(dailyTotal(restoreStore(corrupt),day),last.points);assert.equal(restorePond({phase:'finished',completed:999},day,0).phase,'ready');assert.equal(restorePond({...frozen,fed:[0,0]},day,0).phase,'ready');assert.equal(restoreStore({version:99}).days[day],undefined);
+let simulations=0;for(let d=0;d<30;d++)for(let level=0;level<3;level++){let p=newPond(localDay(new Date(2026,9,1+d)),level);p={...p,phase:'between',completed:5,round:5,points:pondPoints(level,5),fed:Array.from({length:LEVELS[level].koi},(_,i)=>i)};p=startRound(p);const first=p.fish.map(f=>[f.x,f.y]);for(let frame=0;frame<600;frame++){p=advance(p,16);assert(p.fish.every(f=>Number.isFinite(f.angle)&&f.x>=68&&f.x<=652&&f.y>=65&&f.y<=435));}assert(p.fish.some((f,i)=>Math.hypot(f.x-first[i][0],f.y-first[i][1])>5));simulations++;}
+assert.deepEqual(Object.keys(en).sort(),Object.keys(zh).sort());for(const key of Object.keys(en))assert.deepEqual([...en[key].matchAll(/\{(\w+)\}/g)].map(m=>m[1]).sort(),[...zh[key].matchAll(/\{(\w+)\}/g)].map(m=>m[1]).sort());assert.equal(localDay(new Date(2026,9,26,23,59)),'2026-10-26');assert.equal(localDay(new Date(2026,9,27,0,0)),'2026-10-27');
+console.log(`PASS: ${rounds} scoring rounds; six-round cap; 3 increasing fish counts; movement ramps; duplicate feed; pellet cooldown; timeout; pause/resume; hit testing; completed-round points; 3 daily ponds; duplicate-score prevention; reload/migration; date rollover; ${simulations} motion simulations; English/Chinese parity.`);

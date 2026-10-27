@@ -1,0 +1,33 @@
+export const MAX_ROUNDS=6;
+export const LEVELS=[{key:'easy',koi:4,speed:34,seconds:13,cooldown:650,bonus:50},{key:'medium',koi:6,speed:42,seconds:18,cooldown:950,bonus:100},{key:'hard',koi:8,speed:50,seconds:23,cooldown:1250,bonus:200}];
+export const SPEEDS=[1,1.4,1.95,2.7,3.6,4.8];
+export const WIDTH=720,HEIGHT=500;
+export function hash(text){let h=2166136261;for(const c of text){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
+export function random(seed){return()=>{let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
+export function localDay(date=new Date()){return`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;}
+export function roundDuration(level,round){return(LEVELS[level].seconds-.6*(round-1))*1000;}
+export function pelletDelay(level,round){return LEVELS[level].cooldown+90*(round-1);}
+export function roundPoints(level,round){const c=LEVELS[level];return 10*c.koi*(c.koi+1)/2+c.bonus*round;}
+export function pondPoints(level,completed){return Array.from({length:completed},(_,i)=>roundPoints(level,i+1)).reduce((a,b)=>a+b,0);}
+export function newPond(day,level){if(!LEVELS[level])throw Error('Invalid pond level');const rng=random(hash(day+':pond:'+level)),count=LEVELS[level].koi;const fish=Array.from({length:count},(_,id)=>{const angle=2*Math.PI*id/count+.2;return{id,x:360+Math.cos(angle)*225,y:250+Math.sin(angle)*135,angle:rng()*Math.PI*2,phase:rng()*Math.PI*2,pattern:Math.floor(rng()*10000)};});return{day,level,round:0,completed:0,phase:'ready',resumePhase:null,remaining:roundDuration(level,1),cooldown:0,fed:[],points:0,reason:null,fish,motionTime:0};}
+export function startRound(s){if(!['ready','between'].includes(s.phase))return s;const round=s.completed+1;if(round>MAX_ROUNDS)return s;return{...s,round,phase:'feeding',remaining:roundDuration(s.level,round),cooldown:0,fed:[],reason:null};}
+export function pause(s){return s.phase==='feeding'?{...s,phase:'paused',resumePhase:'feeding'}:s;}
+export function resume(s){return s.phase==='paused'?{...s,phase:s.resumePhase||'feeding',resumePhase:null}:s;}
+const angleDelta=(a,b)=>Math.atan2(Math.sin(b-a),Math.cos(b-a));
+export function swim(fish,dt,time,speed){return fish.map(f=>{let vx=Math.cos(f.angle),vy=Math.sin(f.angle);const pad=80,force=.09;vx+=Math.sin(time*.55+f.phase)*force;vy+=Math.cos(time*.43+f.phase)*force;
+ if(f.x<pad+45)vx+=(pad+45-f.x)/35;if(f.x>WIDTH-pad-45)vx-=(f.x-(WIDTH-pad-45))/35;if(f.y<pad+25)vy+=(pad+25-f.y)/30;if(f.y>HEIGHT-pad-25)vy-=(f.y-(HEIGHT-pad-25))/30;
+ for(const other of fish){if(other.id===f.id)continue;const dx=f.x-other.x,dy=f.y-other.y,d=Math.hypot(dx,dy);if(d<116&&d>.01){vx+=dx/d*(116-d)/90;vy+=dy/d*(116-d)/90;}}
+ const target=Math.atan2(vy,vx),angle=f.angle+Math.max(-2.4*dt,Math.min(2.4*dt,angleDelta(f.angle,target)));let x=f.x+Math.cos(angle)*speed*dt,y=f.y+Math.sin(angle)*speed*dt,a=angle;
+ if(x<68||x>WIDTH-68){x=Math.max(68,Math.min(WIDTH-68,x));a=Math.PI-a;}if(y<65||y>HEIGHT-65){y=Math.max(65,Math.min(HEIGHT-65,y));a=-a;}return{...f,x,y,angle:a};});}
+export function advance(s,ms){if(!Number.isFinite(ms)||ms<0||s.phase==='paused'||s.phase==='finished')return s;let remaining=s.remaining,cooldown=s.cooldown;if(s.phase==='feeding'){remaining=Math.max(0,remaining-ms);cooldown=Math.max(0,cooldown-ms);if(remaining===0)return{...s,remaining:0,cooldown,phase:'finished',reason:'time'};}
+ const elapsed=Math.min(ms,150)/1000,motionTime=s.motionTime+elapsed,speed=LEVELS[s.level].speed*SPEEDS[Math.max(0,s.round-1)];const fish=swim(s.fish,elapsed,motionTime,speed);return{...s,fish,motionTime,remaining,cooldown};}
+export function feed(s,id){if(s.phase!=='feeding')return{state:s,event:'inactive'};if(s.remaining<=0)return{state:{...s,phase:'finished',remaining:0,reason:'time'},event:'time'};if(s.cooldown>0)return{state:s,event:'wait'};if(!s.fish.some(f=>f.id===id))return{state:s,event:'miss'};if(s.fed.includes(id))return{state:{...s,phase:'finished',reason:'repeat'},event:'repeat'};
+ const fed=[...s.fed,id],cooldown=pelletDelay(s.level,s.round);if(fed.length<LEVELS[s.level].koi)return{state:{...s,fed,cooldown},event:'fed'};const completed=s.completed+1,mastered=completed===MAX_ROUNDS;return{state:{...s,fed,cooldown,completed,points:pondPoints(s.level,completed),phase:mastered?'finished':'between',reason:mastered?'mastered':null},event:mastered?'mastered':'round'};}
+export function hitFish(fish,x,y){let best=null,bestD=Infinity;for(const f of fish){const dx=x-f.x,dy=y-f.y,cos=Math.cos(f.angle),sin=Math.sin(f.angle),lx=dx*cos+dy*sin,ly=-dx*sin+dy*cos,d=(lx/76)**2+(ly/52)**2;if(d<=1&&dx*dx+dy*dy<bestD){best=f.id;bestD=dx*dx+dy*dy;}}return best;}
+export function restorePond(raw,day,level){const fresh=newPond(day,level);if(!raw||raw.day!==day||raw.level!==level||!Number.isInteger(raw.completed)||raw.completed<0||raw.completed>MAX_ROUNDS)return fresh;const phases=['ready','feeding','between','paused','finished'];if(!phases.includes(raw.phase))return fresh;const completed=raw.completed,round=raw.round;
+ if(!Number.isInteger(round)||round<0||round>MAX_ROUNDS||!Number.isFinite(raw.remaining)||raw.remaining<0)return fresh;
+ if(raw.phase==='ready'&&(completed!==0||round!==0))return fresh;if(['feeding','paused'].includes(raw.phase)&&(round!==completed+1||completed>=MAX_ROUNDS))return fresh;if(raw.phase==='between'&&(completed<1||completed>=MAX_ROUNDS||round!==completed))return fresh;
+ if(raw.phase==='finished'&&(!['time','repeat','mastered'].includes(raw.reason)||(raw.reason==='mastered')!==(completed===MAX_ROUNDS)))return fresh;
+ const fed=Array.isArray(raw.fed)?raw.fed:[];if(new Set(fed).size!==fed.length||fed.some(id=>!Number.isInteger(id)||id<0||id>=LEVELS[level].koi)||(['feeding','paused'].includes(raw.phase)&&fed.length>=LEVELS[level].koi))return fresh;
+ const fish=Array.isArray(raw.fish)&&raw.fish.length===fresh.fish.length&&raw.fish.every((f,i)=>f.id===i&&[f.x,f.y,f.angle,f.phase].every(Number.isFinite)&&f.x>=68&&f.x<=WIDTH-68&&f.y>=65&&f.y<=HEIGHT-65)?raw.fish.map((f,i)=>({...fresh.fish[i],x:f.x,y:f.y,angle:f.angle,phase:f.phase})):fresh.fish;
+ return{...fresh,phase:raw.phase,resumePhase:raw.phase==='paused'?'feeding':null,completed,round,remaining:Math.min(raw.remaining,roundDuration(level,Math.max(1,round))),cooldown:Math.max(0,Math.min(Number.isFinite(raw.cooldown)?raw.cooldown:0,pelletDelay(level,Math.max(1,round)))),fed:[...fed],points:pondPoints(level,completed),reason:raw.reason||null,fish,motionTime:Number.isFinite(raw.motionTime)&&raw.motionTime>=0?raw.motionTime:0};}
