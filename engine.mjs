@@ -1,6 +1,6 @@
-export const MAX_ROUNDS=6;
-export const LEVELS=[{key:'easy',koi:4,speed:34,seconds:13,cooldown:650,bonus:50},{key:'medium',koi:6,speed:42,seconds:18,cooldown:950,bonus:100},{key:'hard',koi:8,speed:50,seconds:23,cooldown:1250,bonus:200}];
-export const SPEEDS=[1,1.4,1.95,2.7,3.6,4.8];
+export const MAX_ROUNDS=3;
+export const LEVELS=[{key:'easy',koi:6,speed:26,seconds:18,cooldown:650,bonus:50},{key:'medium',koi:8,speed:24,seconds:24,cooldown:950,bonus:100},{key:'hard',koi:10,speed:22,seconds:30,cooldown:1250,bonus:200}];
+export const SPEEDS=[1,1.12,1.25];
 export const WIDTH=720,HEIGHT=500;
 export function hash(text){let h=2166136261;for(const c of text){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
 export function random(seed){return()=>{let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
@@ -9,7 +9,7 @@ export function roundDuration(level,round){return(LEVELS[level].seconds-.6*(roun
 export function pelletDelay(level,round){return LEVELS[level].cooldown+90*(round-1);}
 export function roundPoints(level,round){const c=LEVELS[level];return 10*c.koi*(c.koi+1)/2+c.bonus*round;}
 export function pondPoints(level,completed){return Array.from({length:completed},(_,i)=>roundPoints(level,i+1)).reduce((a,b)=>a+b,0);}
-export function newPond(day,level,attempt=0){if(!LEVELS[level])throw Error('Invalid pond level');const rng=random(hash(day+':pond:'+level+(attempt>0?':replay:'+attempt:''))),count=LEVELS[level].koi;const fish=Array.from({length:count},(_,id)=>{const angle=2*Math.PI*id/count+.2;return{id,x:360+Math.cos(angle)*225,y:250+Math.sin(angle)*135,angle:rng()*Math.PI*2,phase:rng()*Math.PI*2,pattern:Math.floor(rng()*10000)};});return{day,level,attempt,round:0,completed:0,phase:'ready',resumePhase:null,remaining:roundDuration(level,1),cooldown:0,fed:[],points:0,reason:null,fish,motionTime:0};}
+export function newPond(day,level,attempt=0){if(!LEVELS[level])throw Error('Invalid pond level');const rng=random(hash(day+':pond:'+level+(attempt>0?':replay:'+attempt:''))),count=LEVELS[level].koi;const fish=Array.from({length:count},(_,id)=>{const angle=2*Math.PI*id/count+.2;return{id,x:360+Math.cos(angle)*225,y:250+Math.sin(angle)*135,angle:rng()*Math.PI*2,phase:rng()*Math.PI*2,pattern:Math.floor(rng()*10000)};});return{rules:2,day,level,attempt,round:0,completed:0,phase:'ready',resumePhase:null,remaining:roundDuration(level,1),cooldown:0,fed:[],points:0,reason:null,fish,motionTime:0};}
 export function startRound(s){if(!['ready','between'].includes(s.phase))return s;const round=s.completed+1;if(round>MAX_ROUNDS)return s;return{...s,round,phase:'feeding',remaining:roundDuration(s.level,round),cooldown:0,fed:[],reason:null};}
 export function pause(s){return s.phase==='feeding'?{...s,phase:'paused',resumePhase:'feeding'}:s;}
 export function resume(s){return s.phase==='paused'?{...s,phase:s.resumePhase||'feeding',resumePhase:null}:s;}
@@ -24,7 +24,7 @@ export function advance(s,ms){if(!Number.isFinite(ms)||ms<0||s.phase==='paused'|
 export function feed(s,id){if(s.phase!=='feeding')return{state:s,event:'inactive'};if(s.remaining<=0)return{state:{...s,phase:'finished',remaining:0,reason:'time'},event:'time'};if(s.cooldown>0)return{state:s,event:'wait'};if(!s.fish.some(f=>f.id===id))return{state:s,event:'miss'};if(s.fed.includes(id))return{state:{...s,phase:'finished',reason:'repeat'},event:'repeat'};
  const fed=[...s.fed,id],cooldown=pelletDelay(s.level,s.round);if(fed.length<LEVELS[s.level].koi)return{state:{...s,fed,cooldown},event:'fed'};const completed=s.completed+1,mastered=completed===MAX_ROUNDS;return{state:{...s,fed,cooldown,completed,points:pondPoints(s.level,completed),phase:mastered?'finished':'between',reason:mastered?'mastered':null},event:mastered?'mastered':'round'};}
 export function hitFish(fish,x,y){let best=null,bestD=Infinity;for(const f of fish){const dx=x-f.x,dy=y-f.y,cos=Math.cos(f.angle),sin=Math.sin(f.angle),lx=dx*cos+dy*sin,ly=-dx*sin+dy*cos,d=(lx/76)**2+(ly/52)**2;if(d<=1&&dx*dx+dy*dy<bestD){best=f.id;bestD=dx*dx+dy*dy;}}return best;}
-export function restorePond(raw,day,level){const attempt=Number.isSafeInteger(raw?.attempt)&&raw.attempt>=0?raw.attempt:0,fresh=newPond(day,level,attempt);if(!raw||raw.day!==day||raw.level!==level||!Number.isInteger(raw.completed)||raw.completed<0||raw.completed>MAX_ROUNDS)return fresh;const phases=['ready','feeding','between','paused','finished'];if(!phases.includes(raw.phase))return fresh;const completed=raw.completed,round=raw.round;
+export function restorePond(raw,day,level){const attempt=Number.isSafeInteger(raw?.attempt)&&raw.attempt>=0?raw.attempt:0,fresh=newPond(day,level,attempt);if(!raw||raw.rules!==2||raw.day!==day||raw.level!==level||!Number.isInteger(raw.completed)||raw.completed<0||raw.completed>MAX_ROUNDS)return fresh;const phases=['ready','feeding','between','paused','finished'];if(!phases.includes(raw.phase))return fresh;const completed=raw.completed,round=raw.round;
  if(!Number.isInteger(round)||round<0||round>MAX_ROUNDS||!Number.isFinite(raw.remaining)||raw.remaining<0)return fresh;
  if(raw.phase==='ready'&&(completed!==0||round!==0))return fresh;if(['feeding','paused'].includes(raw.phase)&&(round!==completed+1||completed>=MAX_ROUNDS))return fresh;if(raw.phase==='between'&&(completed<1||completed>=MAX_ROUNDS||round!==completed))return fresh;
  if(raw.phase==='finished'&&(!['time','repeat','mastered'].includes(raw.reason)||(raw.reason==='mastered')!==(completed===MAX_ROUNDS)))return fresh;

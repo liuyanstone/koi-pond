@@ -8,13 +8,13 @@ Each local calendar day has three ponds, in order:
 
 | Pond | Koi | First round timer | Initial wait between pellets |
 | --- | ---: | ---: | ---: |
-| Easy | 4 | 13 seconds | 0.65 seconds |
-| Medium | 6 | 18 seconds | 0.95 seconds |
-| Hard | 8 | 23 seconds | 1.25 seconds |
+| Easy | 6 | 18 seconds | 0.65 seconds |
+| Medium | 8 | 24 seconds | 0.95 seconds |
+| Hard | 10 | 30 seconds | 1.25 seconds |
 
 Every round requires feeding each fish exactly once. Tap/click a fish, or Tab to a fish and use Enter/Space. A brief ripple confirms the feed. Fish keep swimming and do not retain a fed marker or change appearance. Wait for the pellet ring to refill; early taps are ignored, including double clicks during the wait. Clicking water does not consume food or end the pond.
 
-After a successful round, select the next round. The feeding list resets; the same fish swim faster. Speed multipliers are 1, 1.4, 1.95, 2.7, 3.6 and 4.8. Each round's timer is 0.6 seconds shorter and pellet wait 0.09 seconds longer than the prior round. These are original tuning choices, not claimed Lumosity specifications. Tracking becomes progressively harder, with a maximum of six rounds per pond. Clearing all six earns pond mastery rather than forcing a failure.
+After a successful round, select the next round. The feeding list resets; the same fish swim only slightly faster. Base speeds are 26, 24 and 22 pond units/second for 6, 8 and 10 fish respectively, so larger schools are slower. The three round multipliers are 1, 1.12 and 1.25; even the highest speed is at most 32.5 pond units/second. Each round's timer is 0.6 seconds shorter and pellet wait 0.09 seconds longer than the prior round. These are original tuning choices, not claimed Lumosity specifications. Tracking becomes progressively harder, with a maximum of three rounds per pond. Clearing all three earns pond mastery rather than forcing a failure.
 
 A repeated feed after the pellet is ready, or running out of time with unfed fish, ends the current pond. Completed rounds retain their points. Continue to the next daily pond. After three ponds, a difficulty chooser unlocks. Play fresh Easy, Medium or Hard ponds one at a time, with no daily replay limit. Finish the current pond before choosing another. Each replay resets the rounds, timer, cooldown, feeding list and fish, while keeping the day’s completed best scores. An unfinished replay resumes after reopening. A new date starts three fresh starter ponds before replays unlock again.
 
@@ -34,6 +34,8 @@ Lumosity's public [Playing Koi instructions](https://help.lumosity.com/hc/en-us/
 
 Buildless HTML, CSS, SVG and JavaScript modules. Serve this folder with `python3 -m http.server 8781`. Do not open index.html with a file URL; the ES modules require HTTP(S).
 
-Run `node check.mjs` with Node.js. Checks cover six rounds at each of three levels, score calculation, duplicate feeds, cooldown, timeout, pause/resume, hit testing, saved progress, date rollover, corruption handling, English/Chinese parity and 90 motion simulations. Browser checks additionally cover moving-fish pointer input, keyboard feeding, round advancement, cooldown protection, Chinese text, pause/reload and daily score completion, replay unlock, fresh fish, higher/lower replay scores, unfinished replay protection, and replay pause/reload.
+Run `node check.mjs` with Node.js. Checks cover three rounds at each of three levels, score calculation, duplicate feeds, cooldown, timeout, pause/resume, hit testing, saved progress, date rollover, corruption handling, English/Chinese parity and 90 motion simulations. Browser checks additionally cover moving-fish pointer input, keyboard feeding, round advancement, cooldown protection, Chinese text, pause/reload and daily score completion, replay unlock, fresh fish, higher/lower replay scores, unfinished replay protection, and replay pause/reload.
 
 Publish the main branch root using GitHub Pages. Google Fonts are optional and have local font fallbacks. Sounds use local Web Audio synthesis, with no microphone or downloads. No analytics, ads, server, or external game API is used.
+
+Earlier completed results retain their original fish-count and six-round scoring, marked “Earlier score” in the table. Store version 2 keeps these records alongside new three-round results without recalculating old points using the new fish counts. Unfinished old-rule ponds restart at the same daily stage or replay attempt with the new fish counts and clear feeding memory.
