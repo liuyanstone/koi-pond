@@ -1,5 +1,5 @@
-import {LEVELS,MAX_ROUNDS,swimSpeed,localDay,newPond,startRound,advance,feed,pause,resume,hitFish,roundDuration,pelletDelay,roundPoints} from './engine.mjs?v=gold-4';
-import {STORAGE_KEY,createStore,restoreStore,dayData,currentPond,checkpoint,finishPond,dailyTotal,bestByLevel,beginReplay,resultRoundLimit} from './state.mjs?v=gold-4';
+import {LEVELS,MAX_ROUNDS,swimSpeed,localDay,newPond,startRound,advance,feed,pause,resume,hitFish,roundDuration,pelletDelay,roundPoints} from './engine.mjs?v=ten-5';
+import {STORAGE_KEY,createStore,restoreStore,dayData,currentPond,checkpoint,finishPond,dailyTotal,bestByLevel,beginReplay,resultRoundLimit} from './state.mjs?v=ten-5';
 import {t,language,changeLanguage,applyLanguage} from './i18n.mjs?v=gold-4';
 import {createGameAudio} from './audio.mjs?v=gold-4';
 const $=s=>document.querySelector(s),NS='http://www.w3.org/2000/svg',sound=createGameAudio('koi-pond-sound');

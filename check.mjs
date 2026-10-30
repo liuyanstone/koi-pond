@@ -38,9 +38,9 @@ const corruptReplay=JSON.parse(JSON.stringify(replayStore));corruptReplay.days[d
 console.log('PASS: replays unlock after three ponds; fresh fish; all difficulties; one active replay; best-per-difficulty score; lower and unfinished replay protection; duplicate prevention; paused replay reload; legacy scores; daily reset.');
 for(let level=0;level<3;level++){const selected=currentPond(beginReplay(state,day,level),day);assert.equal(selected.level,level);assert.equal(selected.fish.length,LEVELS[level].koi);}
 
-assert.equal(MAX_ROUNDS,3);assert.deepEqual(SPEEDS,[[60,120,200],[60,100,160],[60,90,150]]);
+assert.equal(MAX_ROUNDS,3);assert.deepEqual(SPEEDS,[[60,120,200],[60,100,160],[60,80,120]]);
 for(let level=0;level<3;level++)for(let round=1;round<=3;round++){
- const speed=swimSpeed(level,round);assert.equal(speed,[[60,120,200],[60,100,160],[60,90,150]][level][round-1]);
+ const speed=swimSpeed(level,round);assert.equal(speed,[[60,120,200],[60,100,160],[60,80,120]][level][round-1]);
  let p=startRound({...newPond(day,level),phase:round===1?'ready':'between',completed:round-1,round:round-1});
  const probe={...p,fish:[{...p.fish[0],x:360,y:250,angle:0}]};const measured=advance(probe,100);assert(Math.abs(Math.hypot(measured.fish[0].x-360,measured.fish[0].y-250)-speed*.1)<1e-8,'Actual unobstructed displacement matches the requested speed');
  const moved=advance(p,50);for(let i=0;i<p.fish.length;i++)assert(Math.hypot(moved.fish[i].x-p.fish[i].x,moved.fish[i].y-p.fish[i].y)<=speed*.05+1e-8);

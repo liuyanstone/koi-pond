@@ -1,6 +1,6 @@
 export const MAX_ROUNDS=3;
 export const LEVELS=[{key:'easy',koi:6,seconds:18,cooldown:650,bonus:50},{key:'medium',koi:8,seconds:24,cooldown:950,bonus:100},{key:'hard',koi:10,seconds:30,cooldown:1250,bonus:200}];
-export const SPEEDS=[[60,120,200],[60,100,160],[60,90,150]];
+export const SPEEDS=[[60,120,200],[60,100,160],[60,80,120]];
 export function swimSpeed(level,round=1){if(!SPEEDS[level])throw Error('Invalid pond level');return SPEEDS[level][Math.max(0,Math.min(MAX_ROUNDS-1,round-1))];}
 export const WIDTH=720,HEIGHT=500;
 export function hash(text){let h=2166136261;for(const c of text){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}

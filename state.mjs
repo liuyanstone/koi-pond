@@ -1,4 +1,4 @@
-import {LEVELS,MAX_ROUNDS,newPond,restorePond,pondPoints} from './engine.mjs?v=gold-4';
+import {LEVELS,MAX_ROUNDS,newPond,restorePond,pondPoints} from './engine.mjs?v=ten-5';
 export const STORAGE_KEY='koi-pond-v1';
 export function emptyDay(){return{results:[],active:null,extras:[]};}
 export function createStore(){return{version:2,days:{}};}

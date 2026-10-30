@@ -20,7 +20,7 @@ After a successful round, select the next round. The feeding list resets. Actual
 | --- | ---: | ---: | ---: |
 | 6 | 60 | 120 | 200 |
 | 8 | 60 | 100 | 160 |
-| 10 | 60 | 90 | 150 |
+| 10 | 60 | 80 | 120 |
 
 The speed display shows these absolute values per second rather than multipliers. Fish have fully golden-red bodies, tails and fins, with warm gradient shading and fine scale details instead of a white base with large spots. Their appearance stays unchanged after feeding.
  Each round's timer is 0.6 seconds shorter and pellet wait 0.09 seconds longer than the prior round. These are original tuning choices, not claimed Lumosity specifications. Tracking becomes progressively harder, with a maximum of three rounds per pond. Clearing all three earns pond mastery rather than forcing a failure.
