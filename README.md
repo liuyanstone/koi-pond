@@ -14,7 +14,16 @@ Each local calendar day has three ponds, in order:
 
 Every round requires feeding each fish exactly once. Tap/click a fish, or Tab to a fish and use Enter/Space. A brief ripple confirms the feed. Fish keep swimming and do not retain a fed marker or change appearance. Wait for the pellet ring to refill; early taps are ignored, including double clicks during the wait. Clicking water does not consume food or end the pond.
 
-After a successful round, select the next round. The feeding list resets; the same fish swim only slightly faster. Base speeds are 26, 24 and 22 pond units/second for 6, 8 and 10 fish respectively, so larger schools are slower. The three round multipliers are 1, 1.12 and 1.25; even the highest speed is at most 32.5 pond units/second. Each round's timer is 0.6 seconds shorter and pellet wait 0.09 seconds longer than the prior round. These are original tuning choices, not claimed Lumosity specifications. Tracking becomes progressively harder, with a maximum of three rounds per pond. Clearing all three earns pond mastery rather than forcing a failure.
+After a successful round, select the next round. The feeding list resets. Actual swimming speeds, in the pond's 720×500 coordinate system, are:
+
+| Koi count | Round 1 | Round 2 | Round 3 |
+| --- | ---: | ---: | ---: |
+| 6 | 60 | 120 | 200 |
+| 8 | 60 | 100 | 160 |
+| 10 | 60 | 90 | 150 |
+
+The speed display shows these absolute values per second rather than multipliers. Fish have fully golden-red bodies, tails and fins, with warm gradient shading and fine scale details instead of a white base with large spots. Their appearance stays unchanged after feeding.
+ Each round's timer is 0.6 seconds shorter and pellet wait 0.09 seconds longer than the prior round. These are original tuning choices, not claimed Lumosity specifications. Tracking becomes progressively harder, with a maximum of three rounds per pond. Clearing all three earns pond mastery rather than forcing a failure.
 
 A repeated feed after the pellet is ready, or running out of time with unfed fish, ends the current pond. Completed rounds retain their points. Continue to the next daily pond. After three ponds, a difficulty chooser unlocks. Play fresh Easy, Medium or Hard ponds one at a time, with no daily replay limit. Finish the current pond before choosing another. Each replay resets the rounds, timer, cooldown, feeding list and fish, while keeping the day’s completed best scores. An unfinished replay resumes after reopening. A new date starts three fresh starter ponds before replays unlock again.
 

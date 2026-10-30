@@ -1,6 +1,7 @@
 export const MAX_ROUNDS=3;
-export const LEVELS=[{key:'easy',koi:6,speed:26,seconds:18,cooldown:650,bonus:50},{key:'medium',koi:8,speed:24,seconds:24,cooldown:950,bonus:100},{key:'hard',koi:10,speed:22,seconds:30,cooldown:1250,bonus:200}];
-export const SPEEDS=[1,1.12,1.25];
+export const LEVELS=[{key:'easy',koi:6,seconds:18,cooldown:650,bonus:50},{key:'medium',koi:8,seconds:24,cooldown:950,bonus:100},{key:'hard',koi:10,seconds:30,cooldown:1250,bonus:200}];
+export const SPEEDS=[[60,120,200],[60,100,160],[60,90,150]];
+export function swimSpeed(level,round=1){if(!SPEEDS[level])throw Error('Invalid pond level');return SPEEDS[level][Math.max(0,Math.min(MAX_ROUNDS-1,round-1))];}
 export const WIDTH=720,HEIGHT=500;
 export function hash(text){let h=2166136261;for(const c of text){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
 export function random(seed){return()=>{let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
@@ -20,7 +21,7 @@ export function swim(fish,dt,time,speed){return fish.map(f=>{let vx=Math.cos(f.a
  const target=Math.atan2(vy,vx),angle=f.angle+Math.max(-2.4*dt,Math.min(2.4*dt,angleDelta(f.angle,target)));let x=f.x+Math.cos(angle)*speed*dt,y=f.y+Math.sin(angle)*speed*dt,a=angle;
  if(x<68||x>WIDTH-68){x=Math.max(68,Math.min(WIDTH-68,x));a=Math.PI-a;}if(y<65||y>HEIGHT-65){y=Math.max(65,Math.min(HEIGHT-65,y));a=-a;}return{...f,x,y,angle:a};});}
 export function advance(s,ms){if(!Number.isFinite(ms)||ms<0||s.phase==='paused'||s.phase==='finished')return s;let remaining=s.remaining,cooldown=s.cooldown;if(s.phase==='feeding'){remaining=Math.max(0,remaining-ms);cooldown=Math.max(0,cooldown-ms);if(remaining===0)return{...s,remaining:0,cooldown,phase:'finished',reason:'time'};}
- const elapsed=Math.min(ms,150)/1000,motionTime=s.motionTime+elapsed,speed=LEVELS[s.level].speed*SPEEDS[Math.max(0,s.round-1)];const fish=swim(s.fish,elapsed,motionTime,speed);return{...s,fish,motionTime,remaining,cooldown};}
+ const elapsed=Math.min(ms,150)/1000,motionTime=s.motionTime+elapsed,speed=swimSpeed(s.level,s.round);const fish=swim(s.fish,elapsed,motionTime,speed);return{...s,fish,motionTime,remaining,cooldown};}
 export function feed(s,id){if(s.phase!=='feeding')return{state:s,event:'inactive'};if(s.remaining<=0)return{state:{...s,phase:'finished',remaining:0,reason:'time'},event:'time'};if(s.cooldown>0)return{state:s,event:'wait'};if(!s.fish.some(f=>f.id===id))return{state:s,event:'miss'};if(s.fed.includes(id))return{state:{...s,phase:'finished',reason:'repeat'},event:'repeat'};
  const fed=[...s.fed,id],cooldown=pelletDelay(s.level,s.round);if(fed.length<LEVELS[s.level].koi)return{state:{...s,fed,cooldown},event:'fed'};const completed=s.completed+1,mastered=completed===MAX_ROUNDS;return{state:{...s,fed,cooldown,completed,points:pondPoints(s.level,completed),phase:mastered?'finished':'between',reason:mastered?'mastered':null},event:mastered?'mastered':'round'};}
 export function hitFish(fish,x,y){let best=null,bestD=Infinity;for(const f of fish){const dx=x-f.x,dy=y-f.y,cos=Math.cos(f.angle),sin=Math.sin(f.angle),lx=dx*cos+dy*sin,ly=-dx*sin+dy*cos,d=(lx/76)**2+(ly/52)**2;if(d<=1&&dx*dx+dy*dy<bestD){best=f.id;bestD=dx*dx+dy*dy;}}return best;}

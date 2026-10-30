@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import {LEVELS,MAX_ROUNDS,SPEEDS,newPond,startRound,advance,feed,pause,resume,hitFish,roundDuration,pelletDelay,roundPoints,pondPoints,restorePond,localDay} from './engine.mjs';
+import {LEVELS,MAX_ROUNDS,SPEEDS,swimSpeed,newPond,startRound,advance,feed,pause,resume,hitFish,roundDuration,pelletDelay,roundPoints,pondPoints,restorePond,localDay} from './engine.mjs';
 import {createStore,restoreStore,checkpoint,currentPond,finishPond,dailyTotal,dayData} from './state.mjs';
 import {en,zh} from './i18n.mjs';
-const day='2026-10-26';assert.deepEqual(LEVELS.map(l=>l.koi),[6,8,10]);assert(SPEEDS.every((v,i)=>i===0||v>SPEEDS[i-1]));
+const day='2026-10-26';assert.deepEqual(LEVELS.map(l=>l.koi),[6,8,10]);assert(SPEEDS.every(row=>row.every((v,i)=>i===0||v>row[i-1])));
 let rounds=0;
 for(let level=0;level<3;level++){
  let p=newPond(day,level);assert.equal(p.phase,'ready');assert.equal(p.fish.length,LEVELS[level].koi);assert.deepEqual(newPond(day,level),p);
@@ -38,10 +38,11 @@ const corruptReplay=JSON.parse(JSON.stringify(replayStore));corruptReplay.days[d
 console.log('PASS: replays unlock after three ponds; fresh fish; all difficulties; one active replay; best-per-difficulty score; lower and unfinished replay protection; duplicate prevention; paused replay reload; legacy scores; daily reset.');
 for(let level=0;level<3;level++){const selected=currentPond(beginReplay(state,day,level),day);assert.equal(selected.level,level);assert.equal(selected.fish.length,LEVELS[level].koi);}
 
-assert.equal(MAX_ROUNDS,3);assert.deepEqual(SPEEDS,[1,1.12,1.25]);
+assert.equal(MAX_ROUNDS,3);assert.deepEqual(SPEEDS,[[60,120,200],[60,100,160],[60,90,150]]);
 for(let level=0;level<3;level++)for(let round=1;round<=3;round++){
- const speed=LEVELS[level].speed*SPEEDS[round-1];assert(speed<=32.5,'All ponds with six or more koi remain gentle');
+ const speed=swimSpeed(level,round);assert.equal(speed,[[60,120,200],[60,100,160],[60,90,150]][level][round-1]);
  let p=startRound({...newPond(day,level),phase:round===1?'ready':'between',completed:round-1,round:round-1});
+ const probe={...p,fish:[{...p.fish[0],x:360,y:250,angle:0}]};const measured=advance(probe,100);assert(Math.abs(Math.hypot(measured.fish[0].x-360,measured.fish[0].y-250)-speed*.1)<1e-8,'Actual unobstructed displacement matches the requested speed');
  const moved=advance(p,50);for(let i=0;i<p.fish.length;i++)assert(Math.hypot(moved.fish[i].x-p.fish[i].x,moved.fish[i].y-p.fish[i].y)<=speed*.05+1e-8);
  assert(roundDuration(level,round)>(LEVELS[level].koi-1)*pelletDelay(level,round)+5000,'Feeding time leaves room beyond mandatory cooldown');
 }
@@ -50,4 +51,4 @@ const migrated=restoreStore(legacy);assert.equal(migrated.version,2);assert.equa
 const legacyActive={version:1,days:{[day]:{results:[],active:{...startRound(newPond(day,0)),rules:undefined,fish:newPond(day,0).fish.slice(0,4),completed:0,round:1,fed:[0,1]}}}};
 const restart=currentPond(restoreStore(legacyActive),day);assert.equal(restart.phase,'ready');assert.equal(restart.rules,2);assert.equal(restart.fish.length,6);assert.deepEqual(restart.fed,[]);
 let migratedReplay=beginReplay(migrated,day,0),newAttempt=startRound(currentPond(migratedReplay,day));newAttempt=advance(newAttempt,newAttempt.remaining);migratedReplay=finishPond(migratedReplay,newAttempt);assert.equal(dailyTotal(migratedReplay,day),11370,'Legacy best scores are never reduced by a new lower replay');
-console.log('PASS: 6/8/10 koi, exactly three successful rounds, gently capped swim speeds, adequate feeding time, preserved six-round historical scores, and fresh new-rule unfinished ponds.');
+console.log('PASS: 6/8/10 koi, exactly three successful rounds, exact per-count/per-round swim speeds, adequate feeding time, preserved six-round historical scores, and fresh new-rule unfinished ponds.');
